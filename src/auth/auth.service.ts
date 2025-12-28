@@ -62,7 +62,15 @@ export class AuthService {
 
     async refreshToken(userId: string, refreshToken: string) {
         const user = await this.usersService.findById(userId);
+
         if (!user || !user.refreshTokenHash) {
+            throw new ForbiddenException('Access Denied');
+        }
+
+        const expiresDays = parseInt(this.config.getOrThrow('JWT_RT_EXPIRES_IN_MS')) || 7 * 24 * 60 * 60 * 1000;
+        const expirationDate = new Date(user.refreshTokenGeneratedAt!.getTime() + expiresDays);
+
+        if (expirationDate < new Date()) {
             throw new ForbiddenException('Access Denied');
         }
 
