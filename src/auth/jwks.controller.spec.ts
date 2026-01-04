@@ -12,12 +12,12 @@ describe('JwksController', () => {
         {
           provide: ConfigService,
           useValue: {
-            getOrThrow: jest.fn().mockReturnValue(
-              Buffer.from('mock-public-key', 'base64')
-            )
-          }
-        }
-      ]
+            getOrThrow: jest
+              .fn()
+              .mockReturnValue(Buffer.from('mock-public-key', 'base64')),
+          },
+        },
+      ],
     }).compile();
 
     controller = module.get<JwksController>(JwksController);

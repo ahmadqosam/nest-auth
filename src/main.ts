@@ -8,10 +8,12 @@ import { apiReference } from '@scalar/nestjs-api-reference';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true,
-    forbidNonWhitelisted: true,
-  }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    }),
+  );
 
   const config = new DocumentBuilder()
     .setTitle('NestJS Auth API')
@@ -21,7 +23,13 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, config);
 
-  app.getHttpAdapter().get('/openapi.json', (req, res) => {
+  const adapter = app.getHttpAdapter() as unknown as {
+    get: (
+      url: string,
+      handler: (req: unknown, res: { json: (data: unknown) => void }) => void,
+    ) => void;
+  };
+  adapter.get('/openapi.json', (req, res) => {
     res.json(document);
   });
 
@@ -30,10 +38,10 @@ async function bootstrap() {
     apiReference({
       spec: {
         content: document,
-      }
-    } as any)
-  )
+      },
+    } as unknown as Record<string, any>),
+  );
 
   await app.listen(process.env.PORT ?? 3000);
 }
-bootstrap();
+void bootstrap();

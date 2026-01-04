@@ -7,11 +7,8 @@ import { JwtStrategy } from './strategy/jwt.strategy';
 import { JwksController } from './jwks.controller';
 
 @Module({
-  imports: [
-    UsersModule,
-    JwtModule.register({})
-  ],
+  imports: [UsersModule, JwtModule.register({})],
   providers: [AuthService, JwtStrategy],
-  controllers: [AuthController, JwksController]
+  controllers: [AuthController, JwksController],
 })
-export class AuthModule { }
+export class AuthModule {}

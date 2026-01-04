@@ -18,7 +18,7 @@ describe('UsersService', () => {
               update: jest.fn(),
             },
           },
-        }
+        },
       ],
     }).compile();
 

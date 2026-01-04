@@ -14,8 +14,8 @@ describe('PrismaService', () => {
           useValue: {
             get: jest.fn().mockReturnValue('file:./dev.db'),
             getOrThrow: jest.fn().mockReturnValue('file:./dev.db'),
-          }
-        }
+          },
+        },
       ],
     }).compile();
 

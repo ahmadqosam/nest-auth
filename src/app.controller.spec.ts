@@ -16,7 +16,7 @@ describe('AppController', () => {
 
   describe('root', () => {
     it('should return "Hello World!"', () => {
-      const req = { user: { userId: '123' } }
+      const req = { user: { userId: '123' } };
       expect(appController.getProfile(req)).toEqual({ userId: '123' });
     });
   });

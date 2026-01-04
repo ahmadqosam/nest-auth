@@ -1,14 +1,22 @@
+import * as argon2 from 'argon2';
+
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { ConfigService } from '@nestjs/config';
-import { ConflictException, ForbiddenException, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  ForbiddenException,
+  UnauthorizedException,
+} from '@nestjs/common';
 
 jest.mock('argon2', () => ({
   hash: jest.fn().mockResolvedValue('mock_hash'),
   verify: jest.fn().mockResolvedValue(true), // Default to true
 }));
+
+(argon2.verify as jest.Mock).mockResolvedValue(true);
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -25,22 +33,19 @@ describe('AuthService', () => {
   const mockTokens = {
     access_token: 'access_token',
     refresh_token: 'refresh_token',
-  }
+  };
 
   beforeEach(async () => {
-    const argon2 = require('argon2');
-    (argon2.verify as jest.Mock).mockResolvedValue(true);
-
     usersService = {
       findByEmail: jest.fn(),
       findById: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
-    } as unknown as UsersService
+    } as unknown as UsersService;
 
     jwtService = {
       signAsync: jest.fn().mockResolvedValue(mockTokens.access_token),
-    } as unknown as JwtService
+    } as unknown as JwtService;
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -68,8 +73,8 @@ describe('AuthService', () => {
               }
               return 'mock-data';
             }),
-          }
-        }
+          },
+        },
       ],
     }).compile();
 
@@ -83,7 +88,9 @@ describe('AuthService', () => {
   describe('signup', () => {
     it('should throw ConflictException if user exists', async () => {
       (usersService.findByEmail as jest.Mock).mockResolvedValue(mockUser);
-      await expect(service.signup(mockUser.email, 'password')).rejects.toThrow(ConflictException);
+      await expect(service.signup(mockUser.email, 'password')).rejects.toThrow(
+        ConflictException,
+      );
     });
 
     it('should create user and return tokens', async () => {
@@ -99,59 +106,73 @@ describe('AuthService', () => {
   describe('signin', () => {
     it('should throw UnauthorizedException if user not found', async () => {
       (usersService.findByEmail as jest.Mock).mockResolvedValue(null);
-      await expect(service.signin(mockUser.email, 'password')).rejects.toThrow(UnauthorizedException);
+      await expect(service.signin(mockUser.email, 'password')).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should throw UnauthorizedException if invalid credentials', async () => {
       (usersService.findByEmail as jest.Mock).mockResolvedValue(mockUser);
-      const argon2 = require('argon2');
       (argon2.verify as jest.Mock).mockResolvedValue(false);
-      await expect(service.signin(mockUser.email, 'password')).rejects.toThrow(UnauthorizedException);
+      await expect(service.signin(mockUser.email, 'password')).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should return tokens', async () => {
+      (argon2.verify as jest.Mock).mockResolvedValue(true);
       (usersService.findByEmail as jest.Mock).mockResolvedValue(mockUser);
 
       const result = await service.signin(mockUser.email, 'password');
       expect(result).toHaveProperty('access_token');
       expect(result).toHaveProperty('refresh_token');
-      expect(usersService.update).toHaveBeenCalled();
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(usersService.update as jest.Mock).toHaveBeenCalled();
     });
   });
 
   describe('logout', () => {
     it('should throw UnauthorizedException if user not found', async () => {
       (usersService.findById as jest.Mock).mockResolvedValue(null);
-      await expect(service.logout('123')).rejects.toThrow(UnauthorizedException);
+      await expect(service.logout('123')).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should update user', async () => {
       (usersService.findById as jest.Mock).mockResolvedValue(mockUser);
       await service.logout('123');
-      expect(usersService.update).toHaveBeenCalled();
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(usersService.update as jest.Mock).toHaveBeenCalled();
     });
   });
 
   describe('refreshToken', () => {
     it('should throw ForbiddenException if user not found', async () => {
       (usersService.findById as jest.Mock).mockResolvedValue(null);
-      await expect(service.refreshToken('123', 'refresh_token')).rejects.toThrow(ForbiddenException);
+      await expect(
+        service.refreshToken('123', 'refresh_token'),
+      ).rejects.toThrow(ForbiddenException);
     });
 
     it('should throw ForbiddenException if invalid refresh token', async () => {
       (usersService.findById as jest.Mock).mockResolvedValue(mockUser);
-      await expect(service.refreshToken('123', 'refresh_token')).rejects.toThrow(ForbiddenException);
+      await expect(
+        service.refreshToken('123', 'refresh_token'),
+      ).rejects.toThrow(ForbiddenException);
     });
 
     it('should return tokens', async () => {
       (usersService.findById as jest.Mock).mockResolvedValue({
         ...mockUser,
-        refreshTokenHash: 'refresh_token_hash'
+        refreshTokenHash: 'refresh_token_hash',
+        refreshTokenGeneratedAt: new Date(),
       });
       const result = await service.refreshToken('123', 'refresh_token_hash');
       expect(result).toHaveProperty('access_token');
       expect(result).toHaveProperty('refresh_token');
-      expect(usersService.update).toHaveBeenCalled();
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(usersService.update as jest.Mock).toHaveBeenCalled();
     });
   });
 });
