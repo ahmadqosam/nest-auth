@@ -39,15 +39,10 @@ jobs:
       env:
         DATABASE_URL: "file:./test.db" 
         DB_TOKEN: "dummy_token"
-        JWT_PRIVATE_KEY: "dummy_private_key"
-        JWT_PUBLIC_KEY: "dummy_public_key"
         JWT_AT_SECRET: "super_secret_at"
-        JWT_RT_SECRET: "super_secret_rt"
         JWT_EXPIRES_IN: "15m"
         JWT_RT_EXPIRES_IN: "7d"
         JWT_RT_EXPIRES_IN_MS: "604800000"
-        APP_ID: "ci-test-app"
-        ISSUER: "ci-test-issuer"
       run: |
         npx prisma generate
         npx prisma db push --accept-data-loss
