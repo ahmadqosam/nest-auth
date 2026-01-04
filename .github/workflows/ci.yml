@@ -27,7 +27,7 @@ jobs:
         run: npm run keys:gen
 
       - name: Run linter
-        run: npm run linter
+        run: npm run lint
 
       - name: Run tests
         run: npm run test
